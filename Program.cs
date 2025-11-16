@@ -19,7 +19,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 
 // Configure SQLite database - INDEPENDENT from HR system
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Data Source=/tmp/essleave.db";
 
 builder.Services.AddDbContext<LeaveDbContext>(options =>
@@ -46,6 +46,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
     options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // Register custom services
@@ -91,46 +94,65 @@ app.MapControllers();
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
-// Simple redirect for root
-app.MapGet("/", () => Results.Redirect("/Account/Login"));
+// Root endpoint - prevent redirect loops
+app.MapGet("/", (HttpContext context) =>
+{
+    // If already authenticated, go straight to dashboard
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        return Results.Redirect("/Index");
+    }
+    
+    // Otherwise, redirect to login
+    return Results.Redirect("/Account/Login");
+}).AllowAnonymous();
 
 // INDEPENDENT ESS LEAVE SYSTEM - Initialize database and seed data
 using (var scope = app.Services.CreateScope())
 {
     try
     {
-        Console.WriteLine("?? ESS Leave System - Independent initialization starting...");
+        Console.WriteLine("ESS Leave System - Independent initialization starting...");
         Console.WriteLine($"   Environment: {app.Environment.EnvironmentName}");
         Console.WriteLine($"   Connection: {connectionString}");
-        
-        var context = scope.ServiceProvider.GetRequiredService<LeaveDbContext>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        var context      = scope.ServiceProvider.GetRequiredService<LeaveDbContext>();
+        var userManager  = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+        var roleManager  = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
         // Ensure tables exist for ESS models
         var creator = context.Database.GetService<IRelationalDatabaseCreator>();
-        try 
-        { 
-            creator.CreateTables(); 
-            Console.WriteLine("? ESS database tables created");
-        } 
-        catch 
-        { 
-            Console.WriteLine("?? ESS database tables already exist");
+        try
+        {
+            creator.CreateTables();
+            Console.WriteLine("ESS database tables created");
+        }
+        catch (Exception ex)
+        {
+            // This is usually "tables already exist", which is safe to ignore
+            Console.WriteLine("ESS database tables already exist or could not be created:");
+            Console.WriteLine($"   {ex.Message}");
         }
 
         // Ensure chatbot logs table
         EnsureChatbotLogsTable(context);
 
         // Seed complete ESS data (roles, departments, employees, users, leave types, balances)
-        await ESSDataSeeder.SeedAsync(context, userManager, roleManager);
-
-        Console.WriteLine("? ESS Leave System fully initialized and ready!");
+        try
+        {
+            await ESSDataSeeder.SeedAsync(context, userManager, roleManager);
+            Console.WriteLine("ESS Leave System fully initialized and ready!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Seeding] ESS data seeding failed: {ex.Message}");
+            Console.WriteLine(ex.StackTrace);
+        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"? ESS initialization error: {ex.Message}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        Console.WriteLine($"ESS initialization fatal error: {ex.Message}");
+        Console.WriteLine(ex.StackTrace);
     }
 }
 
@@ -149,7 +171,7 @@ void EnsureChatbotLogsTable(LeaveDbContext context)
         );";
 
         context.Database.ExecuteSqlRaw(createTableSql);
-        Console.WriteLine("? Chatbot logs table ensured");
+        Console.WriteLine("Chatbot logs table ensured");
     }
     catch (Exception ex)
     {
