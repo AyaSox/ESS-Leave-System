@@ -83,7 +83,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-emerald">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-green-theme">
         <div class="container">
             <a class="navbar-brand" asp-page="/Index">
                 <i class="fas fa-calendar-check me-2"></i>ESS Leave System
@@ -174,7 +174,7 @@
 
     <footer class="footer">
         <div class="container text-center text-muted">
-            <p class="mb-0">&copy; 2024 ESS Leave Management System - All rights reserved</p>
+            <p class="mb-0">&copy; 2025 ESS Leave Management System - All rights reserved</p>
         </div>
     </footer>
 
@@ -183,17 +183,27 @@
     
     <!-- Floating Chatbot Widget -->
     <style>
-        /* Emerald theme (local to ESS) to keep UI consistent */
-        :root { --emerald-600:#059669; --emerald-700:#047857; --emerald-500:#10b981; }
-        .bg-emerald { background: linear-gradient(90deg, var(--emerald-700), var(--emerald-600), var(--emerald-500)); }
-        .navbar.bg-emerald .nav-link, .navbar.bg-emerald .navbar-brand { color: #fff !important; }
-        .navbar.bg-emerald .nav-link:hover { color: #eafff5 !important; }
-        .navbar.bg-emerald .nav-link.show, .navbar.bg-emerald .nav-link:focus, .navbar.bg-emerald .nav-link.active { color: #d1fae5 !important; }
-        #chatbot-toggle { position: fixed; right: 20px; bottom: 20px; z-index: 1050; border-radius: 50%; width: 56px; height: 56px; }
+        /* Beautiful green theme */
+        :root { 
+            --primary-green: #16a34a;
+            --secondary-green: #22c55e;
+            --dark-green: #15803d;
+            --light-green: #86efac;
+        }
+        .bg-green-theme { 
+            background: linear-gradient(135deg, var(--dark-green) 0%, var(--primary-green) 50%, var(--secondary-green) 100%); 
+        }
+        .navbar.bg-green-theme .nav-link, .navbar.bg-green-theme .navbar-brand { color: #fff !important; }
+        .navbar.bg-green-theme .nav-link:hover { color: #d1fae5 !important; }
+        .navbar.bg-green-theme .nav-link.show, .navbar.bg-green-theme .nav-link:focus, .navbar.bg-green-theme .nav-link.active { color: #bbf7d0 !important; }
+        #chatbot-toggle { position: fixed; right: 20px; bottom: 20px; z-index: 1050; border-radius: 50%; width: 56px; height: 56px; background: linear-gradient(135deg, var(--primary-green), var(--secondary-green)); border: none; }
+        #chatbot-toggle:hover { transform: scale(1.1); box-shadow: 0 8px 20px rgba(22, 163, 74, 0.3); }
         #chatbot-panel { position: fixed; right: 20px; bottom: 86px; width: 320px; max-height: 60vh; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.15); display: none; z-index: 1050; }
-        #chatbot-header { padding: .6rem .8rem; border-bottom: 1px solid #eee; font-weight: 600; background: var(--emerald-700); color: #fff; border-radius: 10px 10px 0 0; }
+        #chatbot-header { padding: .6rem .8rem; border-bottom: 1px solid #eee; font-weight: 600; background: linear-gradient(135deg, var(--primary-green), var(--secondary-green)); color: #fff; border-radius: 10px 10px 0 0; }
         #chatbot-body { padding: .6rem; overflow-y: auto; max-height: 46vh; }
         #chatbot-input { padding: .5rem; border-top: 1px solid #eee; }
+        #chatbot-input .btn-success { background: var(--primary-green); border-color: var(--primary-green); }
+        #chatbot-input .btn-success:hover { background: var(--dark-green); border-color: var(--dark-green); }
         .chat-msg { font-size: .9rem; margin-bottom: .5rem; }
         .chat-msg.you { text-align: right; }
         .chat-actions a { margin-right: .3rem; margin-top: .25rem; }
