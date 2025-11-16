@@ -39,7 +39,7 @@ Seeded demo accounts:
 - Employee: michael.chen@company.co.za / Test@123
 
 Manager role assignment:
-- A user is a Manager if any employee has `LineManagerId` equal to their `EmployeeId` (assigned during seeding and can be recalculated in services).
+- A user is a Manager if any employee has `LineManagerId` equal to their `EmployeeId` (assigned during seeding and recalculated during seeding based on direct reports in `Data/ESSDataSeeder.cs`).
 
 ## Docker (Local)
 ```
@@ -85,14 +85,15 @@ Limitations of SQLite:
 ## Development Notes
 - Target Framework: .NET 8
 - Project Type: Razor Pages
-- Seeder: `Data/ESSDataSeeder.cs` creates roles, departments, employees, users, leave types, and initial balances.
+- Seeder: `Data/ESSDataSeeder.cs` creates roles, departments, employees, users, leave types, and initial balances. It also assigns `Manager` role when a user has direct reports.
 - Manager relationships seeded; users with direct reports receive the `Manager` role.
 
-## Scripts/Docs
+## Key Files
 - `railway.toml` – Railway deploy config with persistent volume
 - `Dockerfile` – Multi-stage Docker build
-- `RAILWAY_PERSISTENT_DATABASE_FIX.md` – Rationale and details for persistence
-- `MANAGER_ROLE_ASSIGNMENT_GUIDE.md` – How manager roles are assigned
+- `appsettings.Production.json` – Production config (SQLite persistent path)
+- `Data/ESSDataSeeder.cs` – Seeding, roles, and manager assignment logic
+- `Services/LeaveApprovalService.cs` – Auto-approval and approval logic
 
 ## License
 This project is for educational/hobby use. Add a license if you plan to share or reuse commercially.
