@@ -1,0 +1,133 @@
+@page
+@model ESSLeaveSystem.Pages.Admin.CreateUserModel
+@{
+    ViewData["Title"] = "Create New User";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-plus"></i> Create New Employee & User Account</h4>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.StatusMessage))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @Model.StatusMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                        <h5 class="mb-3">Employee Information</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Input.FullName" class="form-label"></label>
+                                <input asp-for="Input.FullName" class="form-control" />
+                                <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.Email" class="form-label"></label>
+                                <input asp-for="Input.Email" class="form-control" type="email" />
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Input.EmployeeNumber" class="form-label"></label>
+                                <input asp-for="Input.EmployeeNumber" class="form-control" placeholder="EMP012" />
+                                <span asp-validation-for="Input.EmployeeNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.JobTitle" class="form-label"></label>
+                                <input asp-for="Input.JobTitle" class="form-control" placeholder="Software Developer" />
+                                <span asp-validation-for="Input.JobTitle" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Input.DepartmentId" class="form-label"></label>
+                                <select asp-for="Input.DepartmentId" class="form-select">
+                                    <option value="">-- Select Department --</option>
+                                    <option value="1">Information Technology</option>
+                                    <option value="2">Human Resources</option>
+                                    <option value="3">Finance</option>
+                                    <option value="4">Operations</option>
+                                    <option value="5">Marketing</option>
+                                </select>
+                                <span asp-validation-for="Input.DepartmentId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.LineManagerId" class="form-label"></label>
+                                <select asp-for="Input.LineManagerId" class="form-select">
+                                    <option value="">-- No Manager (Top Level) --</option>
+                                    <option value="1">Sarah Johnson (IT Manager)</option>
+                                    <option value="4">David Brown (HR Manager)</option>
+                                    <option value="6">Robert Wilson (Finance Manager)</option>
+                                    <option value="8">James Anderson (Operations Manager)</option>
+                                    <option value="9">Sophia Taylor (Marketing Manager)</option>
+                                </select>
+                                <span asp-validation-for="Input.LineManagerId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Input.DateOfBirth" class="form-label"></label>
+                                <input asp-for="Input.DateOfBirth" class="form-control" type="date" />
+                                <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Input.DateHired" class="form-label"></label>
+                                <input asp-for="Input.DateHired" class="form-control" type="date" />
+                                <span asp-validation-for="Input.DateHired" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">Login Credentials</h5>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Password" class="form-label"></label>
+                            <input asp-for="Input.Password" class="form-control" type="password" />
+                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            <small class="form-text text-muted">
+                                Default: TempPass123! (User should change on first login)
+                            </small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus"></i> Create Employee & User Account
+                            </button>
+                            <a asp-page="/Admin/Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <strong><i class="fas fa-info-circle"></i> Note:</strong>
+                <ul class="mb-0">
+                    <li>Leave balances will be initialized automatically</li>
+                    <li>Manager role assigned automatically if they have direct reports</li>
+                    <li>New user must change password on first login</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,8 @@
+# Railway will ignore changes to these files and won't auto-deploy
+*.md
+*.txt
+DEPLOYMENT_*.md
+README.md
+MONTHLY_BACKUP_REMINDER.md
+.git/
+.gitignore
