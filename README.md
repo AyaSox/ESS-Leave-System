@@ -2,6 +2,16 @@
 
 A lightweight Employee Self-Service Leave Management system built with ASP.NET Core Razor Pages (.NET 8). Optimized for simple deployment (Docker + Railway) and hobbyist/portfolio use.
 
+## ?? Live Demo
+**URL:** [https://your-railway-app.up.railway.app](https://your-railway-app.up.railway.app)
+
+**Demo Accounts:**
+- Admin: sarah.johnson@company.co.za / Test@123
+- Manager: david.brown@company.co.za / Test@123
+- Employee: michael.chen@company.co.za / Test@123
+
+> **Note:** This is a hobby/portfolio project. Data may be reset periodically.
+
 ## Features
 - South African BCEA-compliant leave types (Annual, Sick, Family Responsibility, Maternity, Paternity, Study, Unpaid)
 - Roles: Admin, Manager, HR, Employee
@@ -23,11 +33,11 @@ A lightweight Employee Self-Service Leave Management system built with ASP.NET C
 ## Quick Start (Local)
 Prerequisites: .NET 8 SDK
 
-```
+```bash
 cd ESSLeaveSystem
 # Restore & run
- dotnet restore
- dotnet run
+dotnet restore
+dotnet run
 
 # App will start on http://localhost:5000 (or shown URL)
 # Database and seed data are created on first run
@@ -42,12 +52,12 @@ Manager role assignment:
 - A user is a Manager if any employee has `LineManagerId` equal to their `EmployeeId` (assigned during seeding and recalculated during seeding based on direct reports in `Data/ESSDataSeeder.cs`).
 
 ## Docker (Local)
-```
+```bash
 # From ESSLeaveSystem/
- docker build -t ess-leave-system .
+docker build -t ess-leave-system .
 
 # Run with persistent volume for SQLite data
- docker run -d -p 8080:8080 \
+docker run -d -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Production \
   -v essleave-data:/app/data \
   ess-leave-system
@@ -63,9 +73,9 @@ This repo includes `railway.toml` and production settings for persistence.
 - Dockerfile creates `/app/data` at build time
 
 Deploy steps:
-1) Push to GitHub (main branch)
-2) Connect repo to Railway
-3) Railway auto-builds Dockerfile and deploys
+1. Push to GitHub (main branch)
+2. Connect repo to Railway
+3. Railway auto-builds Dockerfile and deploys
 
 Data persistence:
 - SQLite file is stored in Railway volume `/app/data/essleave.db`
