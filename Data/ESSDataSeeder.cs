@@ -259,7 +259,25 @@ public static class ESSDataSeeder
             }
         }
 
-        Console.WriteLine("? Identity users created for all employees");
+        // Smart role assignment based on direct reports
+        foreach (var employee in employees)
+        {
+            var user = await userManager.FindByEmailAsync(employee.Email);
+
+            if (user != null)
+            {
+                var hasDirectReports = await context.Employees
+                    .AnyAsync(e => e.LineManagerId == employee.EmployeeId && !e.IsDeleted);
+                
+                if (hasDirectReports)
+                {
+                    await userManager.AddToRoleAsync(user, "Manager");
+                    Console.WriteLine($"? {employee.FullName} assigned Manager role (has {await context.Employees.CountAsync(e => e.LineManagerId == employee.EmployeeId)} direct reports)");
+                }
+            }
+        }
+
+        Console.WriteLine("? Identity users created with smart role assignment");
     }
 
     private static async Task SeedLeaveTypesAsync(LeaveDbContext context)
