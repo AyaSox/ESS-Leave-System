@@ -10,16 +10,13 @@ namespace ESSLeaveSystem.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly Services.IRoleAutoAssignmentService _roleAutoAssignment;
 
         public LoginModel(
             SignInManager<IdentityUser> signInManager, 
-            UserManager<IdentityUser> userManager,
-            Services.IRoleAutoAssignmentService roleAutoAssignment)
+            UserManager<IdentityUser> userManager)
         {
             _signInManager = signInManager;
             _userManager = userManager;
-            _roleAutoAssignment = roleAutoAssignment;
         }
 
         [BindProperty]
@@ -67,12 +64,10 @@ namespace ESSLeaveSystem.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // Note: Users must be created in HRManagementSystem first
-                // This system does not support self-registration
                 var user = await _userManager.FindByEmailAsync(Input.Email);
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt. If you're a new employee, please contact HR to create your account in the HRManagementSystem first.");
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return Page();
                 }
 
@@ -80,18 +75,6 @@ namespace ESSLeaveSystem.Pages.Account
                 
                 if (result.Succeeded)
                 {
-                    // Auto-assign roles based on organizational structure
-                    try
-                    {
-                        await _roleAutoAssignment.AssignRolesBasedOnOrgStructureAsync(Input.Email);
-                        Console.WriteLine($"? Auto-assigned roles for {Input.Email} based on org structure");
-                    }
-                    catch (Exception ex)
-                    {
-                        // Don't fail login if role assignment fails
-                        Console.WriteLine($"?? Role auto-assignment failed for {Input.Email}: {ex.Message}");
-                    }
-                    
                     return LocalRedirect(returnUrl);
                 }
                 
