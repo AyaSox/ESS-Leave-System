@@ -3,7 +3,7 @@
 A lightweight Employee Self-Service Leave Management system built with ASP.NET Core Razor Pages (.NET 8). Optimized for simple deployment (Docker + Railway) and hobbyist/portfolio use.
 
 ## ?? Live Demo
-**URL:** [https://your-railway-app.up.railway.app](https://your-railway-app.up.railway.app)
+**URL:** [https://YOUR-ACTUAL-RAILWAY-URL.railway.app](https://YOUR-ACTUAL-RAILWAY-URL.railway.app)
 
 **Demo Accounts:**
 - Admin: sarah.johnson@company.co.za / Test@123
@@ -11,6 +11,13 @@ A lightweight Employee Self-Service Leave Management system built with ASP.NET C
 - Employee: michael.chen@company.co.za / Test@123
 
 > **Note:** This is a hobby/portfolio project. Data may be reset periodically.
+
+## ?? **Deployment Status: LIVE ?**
+- Platform: Railway
+- Database: SQLite with persistent volume
+- Region: europe-west4
+- Status: Successfully deployed and running
+- Seeded: 10 employees, 7 leave types, 70 leave balances
 
 ## Features
 - South African BCEA-compliant leave types (Annual, Sick, Family Responsibility, Maternity, Paternity, Study, Unpaid)
@@ -104,6 +111,16 @@ Limitations of SQLite:
 - `appsettings.Production.json` – Production config (SQLite persistent path)
 - `Data/ESSDataSeeder.cs` – Seeding, roles, and manager assignment logic
 - `Services/LeaveApprovalService.cs` – Auto-approval and approval logic
+
+## Deployed Features
+? Leave application and approval workflow  
+? BCEA-compliant leave types (South Africa)  
+? Auto-approval after 5 days  
+? Real-time notifications  
+? Manager dashboard  
+? Admin statistics and balance management  
+? Employee directory  
+? Background services (auto-approval)  
 
 ## License
 This project is for educational/hobby use. Add a license if you plan to share or reuse commercially.
