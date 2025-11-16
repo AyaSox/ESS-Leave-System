@@ -1,0 +1,94 @@
+@page
+@model ESSLeaveSystem.Pages.Manager.TeamLeaveModel
+@{
+    ViewData["Title"] = "Team Leave";
+}
+
+<div class="container-fluid">
+    <div class="mb-3">
+        <h1 class="h3 mb-1 text-gray-800"><i class="fas fa-users me-2"></i>Team Leave Calendar</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a asp-page="/Index" class="text-success">Dashboard</a></li>
+                <li class="breadcrumb-item active">Team Leave</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card shadow mb-3">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label">From</label>
+                    <input type="date" class="form-control" name="from" value="@Model.From?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">To</label>
+                    <input type="date" class="form-control" name="to" value="@Model.To?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Leave Type</label>
+                    <select class="form-select" name="leaveTypeId">
+                        <option value="">All</option>
+                        @foreach (var lt in Model.LeaveTypes)
+                        {
+                            <option value="@lt.LeaveTypeId" selected="@(Model.LeaveTypeId == lt.LeaveTypeId)">@lt.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-success" type="submit"><i class="fas fa-filter me-2"></i>Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">Who's on leave</h6>
+        </div>
+        <div class="card-body">
+            @if (!Model.Items.Any())
+            {
+                <div class="text-muted">No team leave found for the selected period.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Leave Type</th>
+                                <th>Period</th>
+                                <th>Days</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.EmployeeName</div>
+                                        <div class="small text-muted">@item.Email</div>
+                                    </td>
+                                    <td>
+                                        @{ var isAnnual = (item.LeaveTypeName?.Contains("Annual", StringComparison.OrdinalIgnoreCase) ?? false); }
+                                        <span class="badge @(isAnnual ? "bg-success" : item.Color)">@item.LeaveTypeName</span>
+                                    </td>
+                                    <td>@item.StartDate.ToString("MMM dd, yyyy") - @item.EndDate.ToString("MMM dd, yyyy")</td>
+                                    <td>@item.TotalDays</td>
+                                    <td>@item.Status</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

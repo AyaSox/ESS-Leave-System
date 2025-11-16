@@ -1,0 +1,287 @@
+@page "/Manager/PendingApprovals"
+@model PendingApprovalsModel
+@{
+    ViewData["Title"] = "Pending Approvals";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-tasks me-2"></i>Pending Approvals
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="/Index" class="text-success">Dashboard</a></li>
+                <li class="breadcrumb-item active">Pending Approvals</li>
+            </ol>
+        </nav>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Leave Applications -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">
+                <i class="fas fa-calendar-alt me-2"></i>Leave Applications Requiring Your Approval
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (Model.PendingApplications.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Leave Type</th>
+                                <th>Period</th>
+                                <th>Days</th>
+                                <th>Applied</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var application in Model.PendingApplications)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div>
+                                                <div class="fw-bold">@application.Employee?.FullName</div>
+                                                <small class="text-muted">@application.Employee?.Email</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @{ 
+                                            var isAnnual = (application.LeaveType?.Name?.Contains("Annual", StringComparison.OrdinalIgnoreCase) ?? false);
+                                            var badgeClass = isAnnual ? "bg-success" : (application.LeaveType?.Color ?? "bg-primary");
+                                        }
+                                        <span class="badge @badgeClass">
+                                            @application.LeaveType?.Name
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @application.StartDate.ToString("MMM dd") - @application.EndDate.ToString("MMM dd, yyyy")
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">@application.TotalDays</span>
+                                    </td>
+                                    <td>
+                                        @application.AppliedDate.ToString("MMM dd, yyyy")
+                                        <br><small class="text-muted">@application.AppliedDate.ToString("HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <a asp-page="/Manager/ReviewApplication" asp-route-id="@application.LeaveApplicationId" 
+                                           class="btn btn-sm btn-success">
+                                            <i class="fas fa-eye me-1"></i>Review
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-check-circle fa-3x mb-3"></i>
+                    <h5>No Pending Leave Approvals</h5>
+                    <p class="mb-0">All leave applications from your team members are up to date.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Profile Change Requests -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">
+                <i class="fas fa-user-edit me-2"></i>Profile Change Requests Requiring Your Approval
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (Model.PendingProfileChanges.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Field</th>
+                                <th>Old</th>
+                                <th>New</th>
+                                <th>Requested</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var profileChange in Model.PendingProfileChanges)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div>
+                                                <div class="fw-bold">@profileChange.Employee?.FullName</div>
+                                                <small class="text-muted">@profileChange.Employee?.Email</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    @{
+                                        var changeItems = Model.GetProfileChangeItems(profileChange);
+                                        if (!changeItems.Any())
+                                        {
+                                            <td colspan="3" class="text-muted">No visible changes</td>;
+                                        }
+                                        else
+                                        {
+                                            // Render the first row of changes and then additional rows for remaining items
+                                            var first = changeItems.First();
+                                            <td class="fw-semibold">@first.Field</td>
+                                            <td>
+                                                @if (first.IsImage && !string.IsNullOrWhiteSpace(first.Old))
+                                                {
+                                                    <img src="@first.Old" alt="Old" class="rounded" style="width:48px;height:48px;object-fit:cover; border:1px solid #dee2e6;" />
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">@first.Old</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (first.IsImage && !string.IsNullOrWhiteSpace(first.New))
+                                                {
+                                                    <img src="@first.New" alt="New" class="rounded" style="width:48px;height:48px;object-fit:cover; border:1px solid #dee2e6;" />
+                                                }
+                                                else
+                                                {
+                                                    @first.New
+                                                }
+                                            </td>
+                                        }
+                                    }
+                                    <td>
+                                        @profileChange.RequestedAt.ToString("MMM dd, yyyy")
+                                        <br><small class="text-muted">@profileChange.RequestedAt.ToString("HH:mm")</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    onclick="approveProfileChange(@profileChange.RequestId, '@profileChange.Employee?.FullName')">
+                                                <i class="fas fa-check me-1"></i>Approve
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    onclick="rejectProfileChange(@profileChange.RequestId, '@profileChange.Employee?.FullName')">
+                                                <i class="fas fa-times me-1"></i>Reject
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                @* Render remaining change items as additional rows under the same employee *@
+                                @foreach (var ci in Model.GetProfileChangeItems(profileChange).Skip(1))
+                                {
+                                    <tr class="table-borderless">
+                                        <td></td>
+                                        <td class="fw-semibold">@ci.Field</td>
+                                        <td>
+                                            @if (ci.IsImage && !string.IsNullOrWhiteSpace(ci.Old))
+                                            {
+                                                <img src="@ci.Old" alt="Old" class="rounded" style="width:48px;height:48px;object-fit:cover; border:1px solid #dee2e6;" />
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">@ci.Old</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (ci.IsImage && !string.IsNullOrWhiteSpace(ci.New))
+                                            {
+                                                <img src="@ci.New" alt="New" class="rounded" style="width:48px;height:48px;object-fit:cover; border:1px solid #dee2e6;" />
+                                            }
+                                            else
+                                            {
+                                                @ci.New
+                                            }
+                                        </td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-user-check fa-3x mb-3"></i>
+                    <h5>No Pending Profile Changes</h5>
+                    <p class="mb-0">All profile change requests from your team members are up to date.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Profile Change Approval Modal -->
+<div class="modal fade" id="profileChangeModal" tabindex="-1" aria-labelledby="profileChangeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="profileChangeModalLabel">Profile Change Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="profileChangeForm" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="requestId" name="requestId" />
+                    <p id="actionText"></p>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Comment (Optional)</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" 
+                                  placeholder="Add a comment about this decision..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" id="confirmButton" class="btn">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function approveProfileChange(requestId, employeeName) {
+            document.getElementById('requestId').value = requestId;
+            document.getElementById('actionText').textContent = `Are you sure you want to approve the profile changes for ${employeeName}?`;
+            document.getElementById('confirmButton').textContent = 'Approve';
+            document.getElementById('confirmButton').className = 'btn btn-success';
+            document.getElementById('profileChangeForm').action = '/Manager/PendingApprovals?handler=ApproveProfileChange';
+            
+            var modal = new bootstrap.Modal(document.getElementById('profileChangeModal'));
+            modal.show();
+        }
+
+        function rejectProfileChange(requestId, employeeName) {
+            document.getElementById('requestId').value = requestId;
+            document.getElementById('actionText').textContent = `Are you sure you want to reject the profile changes for ${employeeName}?`;
+            document.getElementById('confirmButton').textContent = 'Reject';
+            document.getElementById('confirmButton').className = 'btn btn-danger';
+            document.getElementById('profileChangeForm').action = '/Manager/PendingApprovals?handler=RejectProfileChange';
+            
+            var modal = new bootstrap.Modal(document.getElementById('profileChangeModal'));
+            modal.show();
+        }
+    </script>
+}

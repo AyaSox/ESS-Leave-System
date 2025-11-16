@@ -1,0 +1,102 @@
+@page "/Directory/Profile/{id:int}"
+@model ESSLeaveSystem.Pages.Directory.ProfileModel
+@{
+    ViewData["Title"] = "Employee Profile";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-id-badge me-2"></i>@Model.Employee.FullName</h1>
+        <a asp-page="/Directory/Index" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Back to Directory</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrWhiteSpace(Model.Employee.ProfilePicturePath))
+                    {
+                        <img src="@Model.Employee.ProfilePicturePath" class="rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;" />
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-light d-flex justify-content-center align-items-center mb-3" style="width:120px;height:120px;">
+                            <i class="fas fa-user fa-3x text-muted"></i>
+                        </div>
+                    }
+                    <h4 class="mb-1">@Model.Employee.FullName</h4>
+                    <div class="text-muted">@Model.Employee.JobTitle</div>
+                    <div class="mt-3">
+                        <a href="mailto:@Model.Employee.Email" class="btn btn-sm btn-primary"><i class="fas fa-envelope me-1"></i>Email</a>
+                    </div>
+                    <hr />
+                    <div class="text-start small">
+                        <div class="mb-2"><strong>Employee #:</strong> @Model.Employee.EmployeeNumber</div>
+                        <div class="mb-2"><strong>Department:</strong> @Model.DepartmentName</div>
+                        <div class="mb-2"><strong>Manager:</strong> @Model.ManagerName
+                            @if (Model.ManagerId.HasValue)
+                            {
+                                <a asp-page="/Directory/Profile" asp-route-id="@Model.ManagerId" class="ms-1 small">(view)</a>
+                            }
+                        </div>
+                        <div class="mb-2"><strong>Hired:</strong> @Model.Employee.DateHired.ToString("MMM dd, yyyy")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-sitemap me-2"></i>Org Tree</h6>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="toggleAll(true)"><i class="fas fa-plus-square me-1"></i>Expand all</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="toggleAll(false)"><i class="fas fa-minus-square me-1"></i>Collapse all</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model.OrgRoot.Children.Count == 0)
+                    {
+                        <div class="text-muted">No direct reports.</div>
+                    }
+                    else
+                    {
+                        <ul class="org-tree">
+                            @await Html.PartialAsync("_OrgNode", Model.OrgRoot)
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleAll(expand) {
+            document.querySelectorAll('.org-node-children').forEach(function (el) {
+                el.style.display = expand ? 'block' : 'none';
+            });
+        }
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.classList.contains('org-toggle')) {
+                const ul = e.target.closest('li').querySelector('.org-node-children');
+                if (ul) {
+                    ul.style.display = ul.style.display === 'none' ? 'block' : 'none';
+                }
+            }
+        });
+    </script>
+}
+
+<style>
+    ul.org-tree { list-style: none; padding-left: 0; }
+    ul.org-tree li { margin: .25rem 0; }
+    .org-node { padding: .5rem .75rem; border: 1px solid #e5e5e5; border-radius: .5rem; background: #fff; }
+    .org-node .title { font-weight: 600; }
+    .org-node .subtitle { color: #6c757d; font-size: .875rem; }
+    .org-node-children { margin-left: 2rem; border-left: 2px dashed #e5e5e5; padding-left: 1rem; }
+    .org-toggle { cursor: pointer; color: #0d6efd; }
+    .org-avatar { width:28px;height:28px;object-fit:cover;border-radius:50%;margin-right:.5rem; }
+    .org-placeholder { width:28px;height:28px;border-radius:50%;background:#f1f3f5;display:inline-flex;align-items:center;justify-content:center;color:#adb5bd;margin-right:.5rem; }
+    .org-item { display:flex; align-items:center; }
+</style>

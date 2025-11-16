@@ -1,0 +1,243 @@
+@page "/Leave/Balance"
+@model BalanceModel
+@{
+    ViewData["Title"] = "Leave Balance";
+}
+
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="/Index" class="text-success">Dashboard</a></li>
+                <li class="breadcrumb-item active">Leave Balance</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3 mb-0">Leave Balance</h2>
+                <p class="text-muted mb-0">View your leave entitlements and usage</p>
+            </div>
+            <div>
+                <form method="get" class="d-flex align-items-center gap-2">
+                    <label for="year" class="form-label mb-0">Year:</label>
+                    <select name="year" id="year" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                        @foreach (var year in Model.AvailableYears)
+                        {
+                            <option value="@year" selected="@(year == Model.SelectedYear)">@year</option>
+                        }
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.LeaveBalances.Any())
+{
+    <!-- Leave Balance Cards -->
+    <div class="row mb-4">
+        @foreach (var balance in Model.LeaveBalances)
+        {
+            <div class="col-lg-4 col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        @{ 
+                            var isAnnual = (balance.LeaveType?.Name?.Contains("Annual", StringComparison.OrdinalIgnoreCase) ?? false);
+                            var badgeClass = isAnnual ? "bg-success" : (balance.LeaveType?.Color ?? "bg-secondary");
+                        }
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1">@balance.LeaveType?.Name</h5>
+                                <p class="card-text text-muted small mb-0">@balance.LeaveType?.Description</p>
+                            </div>
+                            <span class="badge @badgeClass rounded-pill">
+                                @balance.AvailableDays days
+                            </span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Usage Progress</small>
+                                <small class="text-muted">@balance.UsedDays / @balance.TotalDays days</small>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" 
+                                     style="width: @(balance.TotalDays > 0 ? (balance.UsedDays / balance.TotalDays * 100) : 0)%"></div>
+                                <div class="progress-bar bg-warning" 
+                                     style="width: @(balance.TotalDays > 0 ? (balance.PendingDays / balance.TotalDays * 100) : 0)%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-success">Used: @balance.UsedDays</small>
+                                <small class="text-warning">Pending: @balance.PendingDays</small>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <div class="fw-bold text-primary">@balance.TotalDays</div>
+                                    <small class="text-muted">Allocated</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border-end">
+                                    <div class="fw-bold text-success">@balance.UsedDays</div>
+                                    <small class="text-muted">Used</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold text-info">@balance.AvailableDays</div>
+                                <small class="text-muted">Available</small>
+                            </div>
+                        </div>
+
+                        @if (balance.CarryForwardDays > 0)
+                        {
+                            <div class="alert alert-info mt-3 py-2">
+                                <small>
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Includes @balance.CarryForwardDays carry-forward days
+                                </small>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a asp-page="/Leave/Apply" class="btn btn-outline-success btn-sm w-100">
+                            <i class="fas fa-plus-circle me-1"></i>Apply for @balance.LeaveType?.Name
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>@Model.SelectedYear Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-1">@Model.LeaveBalances.Sum(lb => lb.TotalDays)</h4>
+                                <small class="text-muted">Total Allocated Days</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="border-end">
+                                <h4 class="text-success mb-1">@Model.LeaveBalances.Sum(lb => lb.UsedDays)</h4>
+                                <small class="text-muted">Days Taken</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="border-end">
+                                <h4 class="text-warning mb-1">@Model.LeaveBalances.Sum(lb => lb.PendingDays)</h4>
+                                <small class="text-muted">Pending Approval</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <h4 class="text-info mb-1">@Model.LeaveBalances.Sum(lb => lb.AvailableDays)</h4>
+                            <small class="text-muted">Available Days</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Usage -->
+    @if (Model.RecentUsage.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Recent Leave Taken (@Model.SelectedYear)
+                        </h5>
+                        <a asp-page="/Leave/MyApplications" class="btn btn-sm btn-outline-success">View All Applications</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Leave Type</th>
+                                        <th>Period</th>
+                                        <th>Days</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var usage in Model.RecentUsage)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge @(usage.LeaveType?.Color ?? "bg-secondary")">
+                                                    @usage.LeaveType?.Name
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @usage.StartDate.ToString("MMM dd") - @usage.EndDate.ToString("MMM dd, yyyy")
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold">@usage.TotalDays</span> days
+                                            </td>
+                                            <td>
+                                                <span class="text-truncate" style="max-width: 200px; display: inline-block;" 
+                                                      title="@usage.Reason">
+                                                    @(usage.Reason.Length > 50 ? usage.Reason.Substring(0, 50) + "..." : usage.Reason)
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <!-- No Balance Data -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Leave Balance Data</h4>
+                    <p class="text-muted mb-4">
+                        No leave balances have been set up for @Model.SelectedYear.
+                        Please contact your HR department to configure your leave entitlements.
+                    </p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a asp-page="/Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        @if (Model.SelectedYear == DateTime.Now.Year)
+                        {
+                            <a asp-page="/Leave/Apply" class="btn btn-success">
+                                <i class="fas fa-plus-circle me-2"></i>Apply for Leave
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

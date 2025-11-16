@@ -1,0 +1,357 @@
+@page "/Admin/LeaveStatistics"
+@model ESSLeaveSystem.Pages.Admin.LeaveStatisticsModel
+@{
+    ViewData["Title"] = "Leave Statistics & Analytics";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-chart-bar me-2"></i>Leave Statistics & Analytics</h1>
+        <div>
+            <a asp-page="/Admin/Index" class="btn btn-outline-secondary btn-sm me-2"><i class="fas fa-arrow-left me-1"></i>Back to Admin</a>
+            <button class="btn btn-primary btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>Print Report</button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Year</label>
+                    <select class="form-select" name="Year">
+                        @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 3; y--)
+                        {
+                            <option value="@y" selected="@(Model.Year == y)">@y</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Department</label>
+                    <select class="form-select" name="DepartmentId">
+                        <option value="">All Departments</option>
+                        @foreach (var d in Model.Departments)
+                        {
+                            <option value="@d.DepartmentId" selected="@(Model.DepartmentId == d.DepartmentId)">@d.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Leave Type</label>
+                    <select class="form-select" name="LeaveTypeId">
+                        <option value="">All Types</option>
+                        @foreach (var lt in Model.LeaveTypes)
+                        {
+                            <option value="@lt.LeaveTypeId" selected="@(Model.LeaveTypeId == lt.LeaveTypeId)">@lt.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100" type="submit"><i class="fas fa-filter me-2"></i>Apply Filters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Applications</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Stats.TotalApplications</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Approved</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Stats.ApprovedApplications</div>
+                            <div class="text-xs text-muted">@Model.Stats.ApprovalRate%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Pending</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Stats.PendingApplications</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Days Taken</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Stats.TotalDaysTaken</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-days fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Leave Type Breakdown -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Leave Type Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.LeaveTypeStats.Any())
+                    {
+                        @foreach (var stat in Model.LeaveTypeStats)
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-semibold">@stat.LeaveTypeName</span>
+                                    <span>@stat.Applications apps / @stat.DaysTaken days</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar @stat.Color" role="progressbar" 
+                                         style="width: @(Model.Stats.TotalApplications > 0 ? (stat.Applications * 100.0 / Model.Stats.TotalApplications) : 0)%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted">No data available</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Department Breakdown -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Department Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.DepartmentStats.Any())
+                    {
+                        @foreach (var stat in Model.DepartmentStats)
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="fw-semibold">@stat.DepartmentName</span>
+                                    <span>@stat.Applications apps / @stat.DaysTaken days</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-info" role="progressbar" 
+                                         style="width: @(Model.Stats.TotalApplications > 0 ? (stat.Applications * 100.0 / Model.Stats.TotalApplications) : 0)%"></div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted">No data available</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Trends -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Monthly Leave Trends (@Model.Year)</h6>
+        </div>
+        <div class="card-body">
+            @if (Model.MonthlyStats.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th>Applications</th>
+                                <th>Days Taken</th>
+                                <th>Avg Days/App</th>
+                                <th>Approval Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stat in Model.MonthlyStats)
+                            {
+                                <tr>
+                                    <td>@stat.MonthName</td>
+                                    <td>@stat.Applications</td>
+                                    <td>@stat.DaysTaken</td>
+                                    <td>@(stat.Applications > 0 ? ((double)stat.DaysTaken / stat.Applications).ToString("F1") : "0")</td>
+                                    <td>@stat.ApprovalRate%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-muted">No monthly data available</div>
+            }
+        </div>
+    </div>
+
+    <!-- Balance Overview -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Leave Balance Overview (@Model.Year)</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3 text-center">
+                    <h4 class="text-primary">@Model.BalanceStats.TotalEmployeesWithBalances</h4>
+                    <small class="text-muted">Employees with Balances</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <h4 class="text-success">@Model.BalanceStats.TotalAllocatedDays</h4>
+                    <small class="text-muted">Total Days Allocated</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <h4 class="text-warning">@Model.BalanceStats.TotalUsedDays</h4>
+                    <small class="text-muted">Total Days Used</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <h4 class="text-info">@Model.BalanceStats.TotalRemainingDays</h4>
+                    <small class="text-muted">Total Days Remaining</small>
+                </div>
+            </div>
+            
+            @if (Model.BalanceByType.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Leave Type</th>
+                                <th>Employees</th>
+                                <th>Total Allocated</th>
+                                <th>Total Used</th>
+                                <th>Total Remaining</th>
+                                <th>Utilization %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var balance in Model.BalanceByType)
+                            {
+                                <tr>
+                                    <td><span class="badge @balance.Color">@balance.LeaveTypeName</span></td>
+                                    <td>@balance.EmployeeCount</td>
+                                    <td>@balance.TotalAllocated</td>
+                                    <td>@balance.TotalUsed</td>
+                                    <td>@balance.TotalRemaining</td>
+                                    <td>@balance.UtilizationRate%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Top Leave Takers -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Leave Takers (@Model.Year)</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.TopLeaveTakers.Any())
+                    {
+                        @foreach (var emp in Model.TopLeaveTakers.Take(10))
+                        {
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <div>
+                                    <div class="fw-semibold">@emp.EmployeeName</div>
+                                    <small class="text-muted">@emp.DepartmentName</small>
+                                </div>
+                                <div class="text-end">
+                                    <div>@emp.TotalDays days</div>
+                                    <small class="text-muted">@emp.Applications apps</small>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted">No data available</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Approvals by Manager -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Pending Approvals by Manager</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.ManagerPendingStats.Any())
+                    {
+                        @foreach (var mgr in Model.ManagerPendingStats)
+                        {
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <div>
+                                    <div class="fw-semibold">@mgr.ManagerName</div>
+                                    <small class="text-muted">@mgr.DepartmentName</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-warning">@mgr.PendingCount pending</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-success"><i class="fas fa-check-circle me-2"></i>No pending approvals</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary { border-left: 4px solid var(--bs-primary) !important; }
+    .border-left-success { border-left: 4px solid var(--bs-success) !important; }
+    .border-left-warning { border-left: 4px solid var(--bs-warning) !important; }
+    .border-left-info { border-left: 4px solid var(--bs-info) !important; }
+    .text-xs { font-size: 0.7rem; }
+    @@media print {
+        .btn, .card-header .btn-group, form { display: none !important; }
+    }
+</style>

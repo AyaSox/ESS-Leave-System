@@ -1,0 +1,350 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+@if (TempData["InfoMessage"] != null)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>@TempData["InfoMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">Welcome back, @User.Identity?.Name</h1>
+                <p class="text-muted mb-0">Here's your leave management overview</p>
+            </div>
+            <div>
+                <a asp-page="/Leave/Apply" class="btn btn-success">
+                    <i class="fas fa-plus-circle me-2"></i>Apply for Leave
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card border-left-primary">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Remaining Leave Days
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.RemainingLeave</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-days fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card border-left-success">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Leaves Taken (This Year)
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalLeavesTaken</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card border-left-warning">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Pending Applications
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.PendingApplications</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+    {
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card border-left-info">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Awaiting My Approval
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.PendingApprovals.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tasks fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Notifications Section -->
+@if (Model.RecentNotifications.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell me-2"></i>Recent Notifications
+                        @{ var displayUnread = Math.Min(Model.UnreadNotificationCount, Model.RecentNotifications.Count); }
+                        @if (displayUnread > 0)
+                        {
+                            <span class="badge bg-danger ms-2">@displayUnread new</span>
+                        }
+                    </h5>
+                    @if (Model.UnreadNotificationCount > 0)
+                    {
+                        <form method="post" asp-page-handler="MarkAllAsRead" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-check-double me-1"></i> Mark All as Read
+                            </button>
+                        </form>
+                    }
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var notification in Model.RecentNotifications.Take(5))
+                        {
+                            var notificationClass = notification.IsRead ? "" : "bg-light";
+                            var urgentClass = notification.NotificationType == HRManagement.Shared.Models.NotificationType.LeaveUrgentApproval ? "border-start border-danger border-4" : "";
+                            
+                            <div class="list-group-item @notificationClass @urgentClass">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            @switch (notification.NotificationType)
+                                            {
+                                                case HRManagement.Shared.Models.NotificationType.LeaveSubmitted:
+                                                    <i class="fas fa-paper-plane text-primary me-2"></i>
+                                                    break;
+                                                case HRManagement.Shared.Models.NotificationType.LeaveApproved:
+                                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                                    break;
+                                                case HRManagement.Shared.Models.NotificationType.LeaveRejected:
+                                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                                    break;
+                                                case HRManagement.Shared.Models.NotificationType.LeaveCancelled:
+                                                    <i class="fas fa-ban text-warning me-2"></i>
+                                                    break;
+                                                case HRManagement.Shared.Models.NotificationType.LeaveRequiresApproval:
+                                                    <i class="fas fa-clock text-warning me-2"></i>
+                                                    break;
+                                                case HRManagement.Shared.Models.NotificationType.LeaveUrgentApproval:
+                                                    <i class="fas fa-exclamation-triangle text-danger me-2 fa-shake"></i>
+                                                    break;
+                                                case HRManagement.Shared.Models.NotificationType.LeaveAutoApproved:
+                                                    <i class="fas fa-robot text-info me-2"></i>
+                                                    break;
+                                                default:
+                                                    <i class="fas fa-info-circle text-secondary me-2"></i>
+                                                    break;
+                                            }
+                                            <h6 class="mb-0 @(notification.IsRead ? "" : "fw-bold")">@notification.Title</h6>
+                                        </div>
+                                        <p class="mb-1 text-muted small">@notification.Message</p>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock"></i> @notification.CreatedDate.ToString("MMM dd, yyyy HH:mm")
+                                        </small>
+                                    </div>
+                                    <div class="d-flex flex-column align-items-end ms-3">
+                                        @if (!notification.IsRead)
+                                        {
+                                            <form method="post" asp-page-handler="MarkAsRead" asp-route-id="@notification.NotificationId">
+                                                <button type="submit" class="btn btn-sm btn-outline-success mb-2" title="Mark as read">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                                        {
+                                            <a href="@notification.ActionUrl" class="btn btn-sm btn-success">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Leave Balances -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Leave Balances (@DateTime.Now.Year)
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.LeaveBalances.Any())
+                {
+                    @foreach (var balance in Model.LeaveBalances)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold">@balance.LeaveType?.Name</span>
+                                <span class="text-muted">@balance.AvailableDays / @balance.TotalDays days</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar @(balance.LeaveType?.Color ?? "bg-primary")" 
+                                     role="progressbar" 
+                                     style="width: @(balance.TotalDays > 0 ? (balance.AvailableDays / balance.TotalDays * 100) : 0)%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-info-circle fa-2x mb-2"></i>
+                        <p class="mb-0">No leave balances available</p>
+                        <small>Contact HR to set up your leave entitlements</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Applications
+                </h5>
+                <a asp-page="/Leave/MyApplications" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentApplications.Any())
+                {
+                    @foreach (var application in Model.RecentApplications)
+                    {
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <div class="fw-semibold">@application.LeaveType?.Name</div>
+                                <small class="text-muted">
+                                    @application.StartDate.ToString("MMM dd") - @application.EndDate.ToString("MMM dd, yyyy")
+                                    (@application.TotalDays days)
+                                </small>
+                            </div>
+                            <span class="badge @application.StatusBadgeClass">
+                                <i class="fas @application.StatusIcon me-1"></i>@application.Status
+                            </span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                        <p class="mb-0">No leave applications yet</p>
+                        <a asp-page="/Leave/Apply" class="btn btn-sm btn-success mt-2">Apply for your first leave</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+{
+    <!-- Manager Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>Pending Approvals
+                    </h5>
+                    <a asp-page="/Manager/PendingApprovals" class="btn btn-sm btn-outline-danger">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (Model.PendingApprovals.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Leave Type</th>
+                                        <th>Period</th>
+                                        <th>Days</th>
+                                        <th>Applied</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var application in Model.PendingApprovals)
+                                    {
+                                        <tr>
+                                            <td>@application.Employee?.FullName</td>
+                                            <td>@application.LeaveType?.Name</td>
+                                            <td>@application.StartDate.ToString("MMM dd") - @application.EndDate.ToString("MMM dd")</td>
+                                            <td>@application.TotalDays</td>
+                                            <td>@application.AppliedDate.ToString("MMM dd, yyyy")</td>
+                                            <td>
+                                                <a asp-page="/Manager/ReviewApplication" asp-route-id="@application.LeaveApplicationId" 
+                                                   class="btn btn-sm btn-success">Review</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p class="mb-0">No pending approvals</p>
+                            <small>All leave applications are up to date</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .border-left-primary { border-left: 4px solid var(--bs-primary) !important; }
+    .border-left-success { border-left: 4px solid var(--bs-success) !important; }
+    .border-left-warning { border-left: 4px solid var(--bs-warning) !important; }
+    .border-left-info { border-left: 4px solid var(--bs-info) !important; }
+    .text-xs { font-size: 0.7rem; }
+</style>

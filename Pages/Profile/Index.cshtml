@@ -1,0 +1,261 @@
+@page "/Profile"
+@model ESSLeaveSystem.Pages.Profile.IndexModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="row">
+<div class="col-lg-8">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-user me-2"></i>My Profile</h5>
+            <span class="text-muted small">Read-only HR fields are disabled</span>
+        </div>
+        <div class="card-body">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <form method="post" asp-page="/Profile" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong><i class="fas fa-exclamation-circle me-2"></i>Please correct the validation errors:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+                
+                <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                <!-- Profile Picture Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="profile-picture-container">
+                                @if (!string.IsNullOrEmpty(Model.CurrentProfilePicture))
+                                {
+                                    <img src="@Model.CurrentProfilePicture" alt="Current Profile Picture" 
+                                         class="profile-picture-preview rounded-circle" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #dee2e6;">
+                                }
+                                else
+                                {
+                                    <div class="profile-picture-placeholder rounded-circle d-flex align-items-center justify-content-center bg-light" 
+                                         style="width: 100px; height: 100px; border: 3px solid #dee2e6;">
+                                        <i class="fas fa-user fa-3x text-muted"></i>
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex-grow-1">
+                                <label class="form-label">Profile Picture</label>
+                                <input type="file" asp-for="Input.ProfilePicture" class="form-control" accept="image/*" 
+                                       onchange="previewProfilePicture(this)">
+                                <span asp-validation-for="Input.ProfilePicture" class="text-danger"></span>
+                                <div class="form-text">Upload a new profile picture (JPG, PNG, GIF - Max 5MB)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name</label>
+                        <input asp-for="Input.FullName" class="form-control" required />
+                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email (Cannot be changed)</label>
+                        <input type="text" value="@Model.Input.Email" class="form-control" disabled readonly />
+                        <small class="text-muted">Contact HR to change your email address</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Job Title</label>
+                        <input asp-for="Input.JobTitle" class="form-control" />
+                        <span asp-validation-for="Input.JobTitle" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Department</label>
+                        <input value="@Model.DepartmentName" class="form-control" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Date Hired</label>
+                        <input value="@Model.DateHired.ToShortDateString()" class="form-control" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Gender</label>
+                        <select asp-for="Input.Gender" class="form-select">
+                            <option value="">Select...</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Other</option>
+                        </select>
+                        <span asp-validation-for="Input.Gender" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Emergency Contact Name</label>
+                        <input asp-for="Input.EmergencyContactName" class="form-control" />
+                        <span asp-validation-for="Input.EmergencyContactName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Emergency Contact Phone</label>
+                        <input asp-for="Input.EmergencyContactPhone" class="form-control" />
+                        <span asp-validation-for="Input.EmergencyContactPhone" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Changes will be sent to your line manager for approval. HR-only fields (salary, status, date hired) cannot be edited here.
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success" id="submitBtn">
+                        <span class="submit-text">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Changes
+                        </span>
+                        <span class="loading-text d-none">
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            Submitting...
+                        </span>
+                    </button>
+                    <a asp-page="/Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><strong>Line Manager</strong></div>
+            <div class="card-body">
+                @if (Model.LineManager != null)
+                {
+                        <div class="d-flex gap-2 align-items-center">
+                            <i class="fas fa-user-tie fa-2x text-success"></i>
+                            <div>
+                                <div class="fw-bold">@Model.LineManager.FullName</div>
+                                <div class="small text-muted">@Model.LineManager.Email</div>
+                            </div>
+                        </div>
+                }
+                else
+                {
+                    <span class="text-muted">No manager assigned</span>
+                }
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header"><strong>Pending Requests</strong></div>
+            <div class="card-body">
+                @if (Model.PendingRequests.Any())
+                {
+                    <ul class="list-unstyled mb-0 small">
+                        @foreach (var r in Model.PendingRequests)
+                        {
+                            <li class="mb-2"><i class="fas fa-clock text-warning me-1"></i> Requested @r.RequestedAt.ToString("g")</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <span class="text-muted">None</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Profile picture preview
+        function previewProfilePicture(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, GIF)');
+                    input.value = '';
+                    return;
+                }
+                
+                // Validate file size (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB');
+                    input.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.querySelector('.profile-picture-preview');
+                    const placeholder = document.querySelector('.profile-picture-placeholder');
+                    
+                    if (preview) {
+                        preview.src = e.target.result;
+                    } else if (placeholder) {
+                        // Replace placeholder with image
+                        placeholder.outerHTML = `<img src="${e.target.result}" alt="Profile Picture Preview" 
+                            class="profile-picture-preview rounded-circle" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #dee2e6;">`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Form submit handling with debugging
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (!form || !submitBtn) {
+                console.error('Form or submit button not found!');
+                return;
+            }
+
+            const submitText = submitBtn.querySelector('.submit-text');
+            const loadingText = submitBtn.querySelector('.loading-text');
+
+            console.log('Profile form initialized');
+
+            form.addEventListener('submit', function(e) {
+                console.log('Form submit event triggered');
+                
+                // Don't prevent default - let the form submit normally
+                // Just show loading state
+                if (submitBtn && submitText && loadingText) {
+                    submitBtn.disabled = true;
+                    submitText.classList.add('d-none');
+                    loadingText.classList.remove('d-none');
+                }
+            });
+
+            // Debug: Log button click
+            submitBtn.addEventListener('click', function(e) {
+                console.log('Submit button clicked');
+            });
+        });
+    </script>
+}

@@ -1,0 +1,232 @@
+@page "/Manager/ReviewApplication/{id:int?}"
+@model ReviewApplicationModel
+@{
+    ViewData["Title"] = "Review Leave Application";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-clipboard-check me-2"></i>Review Leave Application
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Manager/PendingApprovals">Pending Approvals</a></li>
+                <li class="breadcrumb-item active">Review Application</li>
+            </ol>
+        </nav>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Application == null)
+    {
+        <div class="alert alert-warning">
+            <h4><i class="fas fa-exclamation-triangle me-2"></i>Application Not Found</h4>
+            <p>The leave application you're looking for could not be found or you don't have permission to view it.</p>
+            <a asp-page="/Manager/PendingApprovals" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Pending Approvals
+            </a>
+        </div>
+        return;
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Leave Application Details</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Employee:</strong><br>
+                            <span class="text-muted">@Model.Employee?.FullName</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Leave Type:</strong><br>
+                            <span class="badge @(Model.Application.LeaveType?.Color ?? "bg-primary")">
+                                @Model.Application.LeaveType?.Name
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Period:</strong><br>
+                            <span class="text-muted">
+                                @Model.Application.StartDate.ToString("MMM dd, yyyy") - 
+                                @Model.Application.EndDate.ToString("MMM dd, yyyy")
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Total Days:</strong><br>
+                            <span class="text-muted">@Model.Application.TotalDays days</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Applied Date:</strong><br>
+                            <span class="text-muted">@Model.Application.AppliedDate.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Current Status:</strong><br>
+                            <span class="badge @Model.Application.StatusBadgeClass">
+                                <i class="fas @Model.Application.StatusIcon me-1"></i>@Model.Application.Status
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Reason for Leave:</strong><br>
+                        <div class="p-3 bg-light rounded">
+                            @Model.Application.Reason
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Application.ContactDuringLeave))
+                    {
+                        <div class="mb-3">
+                            <strong>Emergency Contact:</strong><br>
+                            <span class="text-muted">@Model.Application.ContactDuringLeave</span>
+                        </div>
+                    }
+
+                    @if (Model.Application.Status == HRManagement.Shared.Models.LeaveStatus.Pending)
+                    {
+                        <hr>
+                        <h6 class="text-primary mb-3">Manager Review</h6>
+                        
+                        <form method="post">
+                            <input type="hidden" name="applicationId" value="@Model.Application.LeaveApplicationId" />
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Comments (Optional)</label>
+                                <textarea name="comments" class="form-control" rows="3" 
+                                          placeholder="Add any comments for the employee..."></textarea>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="action" value="approve" class="btn btn-success">
+                                    <i class="fas fa-check me-2"></i>Approve
+                                </button>
+                                <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                    <i class="fas fa-times me-2"></i>Reject
+                                </button>
+                                <a asp-page="/Manager/PendingApprovals" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Cancel
+                                </a>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This application has already been processed.
+                        </div>
+                        
+                        @if (Model.Application.ReviewedDate.HasValue)
+                        {
+                            <div class="mb-2">
+                                <strong>Reviewed Date:</strong> @Model.Application.ReviewedDate.Value.ToString("MMM dd, yyyy HH:mm")
+                            </div>
+                        }
+                        
+                        @if (!string.IsNullOrEmpty(Model.Application.ReviewComments))
+                        {
+                            <div class="mb-2">
+                                <strong>Review Comments:</strong><br>
+                                <div class="p-3 bg-light rounded">
+                                    @Model.Application.ReviewComments
+                                </div>
+                            </div>
+                        }
+                        
+                        <a asp-page="/Manager/PendingApprovals" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Approvals
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Employee Leave Balance -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Employee Leave Balance</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.EmployeeBalance != null)
+                    {
+                        <div class="text-center">
+                            <div class="mb-2">
+                                <span class="badge @(Model.Application.LeaveType?.Color ?? "bg-primary") fs-6">
+                                    @Model.Application.LeaveType?.Name
+                                </span>
+                            </div>
+                            <h4 class="text-primary">@Model.EmployeeBalance.AvailableDays</h4>
+                            <p class="text-muted small mb-0">days available</p>
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <small class="text-muted">Total</small><br>
+                                    <strong>@Model.EmployeeBalance.TotalDays</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Used</small><br>
+                                    <strong>@Model.EmployeeBalance.UsedDays</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted">Pending</small><br>
+                                    <strong>@Model.EmployeeBalance.PendingDays</strong>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p class="mb-0">Balance information not available</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-page="/Manager/PendingApprovals" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list me-2"></i>View All Pending
+                        </a>
+                        <a asp-page="/Manager/TeamLeave" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-users me-2"></i>Team Leave Calendar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

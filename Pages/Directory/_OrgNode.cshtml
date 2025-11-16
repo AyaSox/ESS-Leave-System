@@ -1,0 +1,28 @@
+@model ESSLeaveSystem.Pages.Directory.ProfileModel.OrgNode
+<li>
+    <div class="org-node">
+        <div class="org-item">
+            @if (!string.IsNullOrWhiteSpace(Model.Employee.ProfilePicturePath))
+            {
+                <img src="@Model.Employee.ProfilePicturePath" class="org-avatar" />
+            }
+            else
+            {
+                <span class="org-placeholder"><i class="fas fa-user"></i></span>
+            }
+            <div>
+                <div class="title">@Model.Employee.FullName</div>
+                <div class="subtitle">@Model.Employee.JobTitle @if (Model.Children.Any()) { <span class="org-toggle ms-2 small">(toggle)</span> }</div>
+            </div>
+        </div>
+    </div>
+    @if (Model.Children.Any())
+    {
+        <ul class="org-node-children" style="display:none">
+            @foreach (var child in Model.Children)
+            {
+                @await Html.PartialAsync("_OrgNode", child)
+            }
+        </ul>
+    }
+</li>

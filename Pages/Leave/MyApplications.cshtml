@@ -1,0 +1,318 @@
+@page "/Leave/MyApplications"
+@model MyApplicationsModel
+@{
+    ViewData["Title"] = "My Leave Applications";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                <li class="breadcrumb-item active">My Applications</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-list me-2"></i>My Leave Applications
+                </h4>
+                <a asp-page="/Leave/Apply" class="btn btn-success">
+                    <i class="fas fa-plus-circle me-2"></i>Apply for Leave
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Search and Filter -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <form method="get">
+                            <div class="input-group">
+                                <input type="text" name="searchString" value="@Model.CurrentFilter" 
+                                       class="form-control" placeholder="Search by reason or leave type...">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                @if (!string.IsNullOrEmpty(Model.CurrentFilter))
+                                {
+                                    <a asp-page="./MyApplications" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                }
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                @if (Model.Applications.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Leave Type</th>
+                                    <th>Period</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                    <th>Applied Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var application in Model.Applications)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @{ var leaveBadge = (application.LeaveType?.Name?.Contains("Annual", StringComparison.OrdinalIgnoreCase) ?? false) 
+                                                        ? "bg-success" 
+                                                        : (application.LeaveType?.Color ?? "bg-secondary"); }
+                                                <span class="badge me-2 @leaveBadge">
+                                                    @application.LeaveType?.Name
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>@application.StartDate.ToString("MMM dd, yyyy")</strong>
+                                                <br>
+                                                <small class="text-muted">to @application.EndDate.ToString("MMM dd, yyyy")</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">@application.TotalDays</span>
+                                            <small class="text-muted d-block">day(s)</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge @application.StatusBadgeClass">
+                                                <i class="fas @application.StatusIcon me-1"></i>@application.Status
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@application.AppliedDate.ToString("MMM dd, yyyy HH:mm")</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <button type="button" class="btn btn-outline-success" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#viewModal" 
+                                                        onclick="viewApplication(@application.LeaveApplicationId)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                
+                                                @if (application.CanBeCancelled)
+                                                {
+                                                    <button type="button" class="btn btn-outline-danger" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#cancelModal" 
+                                                            onclick="setCancelId(@application.LeaveApplicationId)">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (Model.TotalPages > 1)
+                    {
+                        <nav aria-label="Leave applications pagination">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item @(Model.HasPreviousPage ? "" : "disabled")">
+                                    <a class="page-link" asp-page="./MyApplications" 
+                                       asp-route-pageIndex="@(Model.PageIndex - 1)" 
+                                       asp-route-searchString="@Model.CurrentFilter">Previous</a>
+                                </li>
+
+                                @for (int i = Math.Max(1, Model.PageIndex - 2); i <= Math.Min(Model.TotalPages, Model.PageIndex + 2); i++)
+                                {
+                                    <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                                        <a class="page-link" asp-page="./MyApplications" 
+                                           asp-route-pageIndex="@i" 
+                                           asp-route-searchString="@Model.CurrentFilter">@i</a>
+                                    </li>
+                                }
+
+                                <li class="page-item @(Model.HasNextPage ? "" : "disabled")">
+                                    <a class="page-link" asp-page="./MyApplications" 
+                                       asp-route-pageIndex="@(Model.PageIndex + 1)" 
+                                       asp-route-searchString="@Model.CurrentFilter">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No leave applications found</h5>
+                        @if (!string.IsNullOrEmpty(Model.CurrentFilter))
+                        {
+                            <p class="text-muted">No applications match your search criteria.</p>
+                            <a asp-page="./MyApplications" class="btn btn-outline-secondary">Clear Search</a>
+                        }
+                        else
+                        {
+                            <p class="text-muted">You haven't submitted any leave applications yet.</p>
+                            <a asp-page="/Leave/Apply" class="btn btn-success">Apply for Leave</a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Application Modal -->
+<div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Leave Application Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewModalBody">
+                <!-- Content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Leave Application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this leave application?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This action cannot be undone. You will need to submit a new application if you change your mind.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="post" asp-page-handler="Cancel" id="cancelForm">
+                    <input type="hidden" name="applicationId" id="cancelApplicationId" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Application</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>Cancel Application
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const applications = @Html.Raw(Json.Serialize(Model.Applications.Select(a => new {
+            a.LeaveApplicationId,
+            a.StartDate,
+            a.EndDate,
+            a.TotalDays,
+            a.Reason,
+            a.ContactDuringLeave,
+            a.Status,
+            a.AppliedDate,
+            a.ReviewedDate,
+            a.ReviewComments,
+            LeaveTypeName = a.LeaveType?.Name,
+            LeaveTypeColor = a.LeaveType?.Color
+        })));
+
+        function viewApplication(applicationId) {
+            const application = applications.find(a => a.leaveApplicationId === applicationId);
+            if (!application) return;
+
+            // Determine color: force green for Annual Leave
+            const isAnnual = (application.leaveTypeName || '').toLowerCase().includes('annual');
+            const leaveTypeBadge = isAnnual ? 'bg-success' : (application.leaveTypeColor || 'bg-secondary');
+
+            const modalBody = document.getElementById('viewModalBody');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Leave Type</h6>
+                        <p><span class="badge ${leaveTypeBadge}">${application.leaveTypeName}</span></p>
+                        
+                        <h6>Period</h6>
+                        <p>${new Date(application.startDate).toLocaleDateString()} - ${new Date(application.endDate).toLocaleDateString()}</p>
+                        
+                        <h6>Total Days</h6>
+                        <p>${application.totalDays} day(s)</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Status</h6>
+                        <p><span class="badge ${getStatusBadgeClass(application.status)}">${application.status}</span></p>
+                        
+                        <h6>Applied Date</h6>
+                        <p>${new Date(application.appliedDate).toLocaleString()}</p>
+                        
+                        ${application.reviewedDate ? `
+                        <h6>Reviewed Date</h6>
+                        <p>${new Date(application.reviewedDate).toLocaleString()}</p>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <h6>Reason</h6>
+                <p class="border rounded p-2">${application.reason}</p>
+                
+                ${application.contactDuringLeave ? `
+                <h6>Emergency Contact</h6>
+                <p>${application.contactDuringLeave}</p>
+                ` : ''}
+                
+                ${application.reviewComments ? `
+                <h6>Review Comments</h6>
+                <p class="border rounded p-2">${application.reviewComments}</p>
+                ` : ''}
+            `;
+        }
+
+        function setCancelId(applicationId) {
+            document.getElementById('cancelApplicationId').value = applicationId;
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'Pending': return 'bg-warning';
+                case 'Approved': return 'bg-success';
+                case 'Rejected': return 'bg-danger';
+                case 'Cancelled': return 'bg-secondary';
+                default: return 'bg-secondary';
+            }
+        }
+    </script>
+}

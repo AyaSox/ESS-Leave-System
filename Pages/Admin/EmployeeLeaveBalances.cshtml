@@ -1,0 +1,364 @@
+@page
+@model EmployeeLeaveBalancesModel
+@{
+    ViewData["Title"] = "Employee Leave Balances";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-users-cog me-2"></i>Employee Leave Balances
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="/Index">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-page="/Admin/Index">Admin</a></li>
+                <li class="breadcrumb-item active">Leave Balances</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Employees</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalEmployees</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Allocated</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalAllocatedDays.ToString("F1")</div>
+                            <div class="text-xs text-muted">days</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-plus fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Used</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalUsedDays.ToString("F1")</div>
+                            <div class="text-xs text-muted">days</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Available</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalAvailableDays.ToString("F1")</div>
+                            <div class="text-xs text-muted">days</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Export -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-filter me-2"></i>Filter & Export
+                    </h6>
+                </div>
+                <div class="col-auto">
+                    <div class="btn-group">
+                        <a asp-page-handler="DownloadCsv" 
+                           asp-route-year="@Model.SelectedYear" 
+                           asp-route-departmentId="@Model.SelectedDepartmentId" 
+                           asp-route-leaveTypeId="@Model.SelectedLeaveTypeId"
+                           asp-route-search="@Model.SearchTerm"
+                           class="btn btn-success btn-sm">
+                            <i class="fas fa-download me-1"></i>Download CSV (Simple)
+                        </a>
+                        <a asp-page-handler="DownloadDetailedCsv" 
+                           asp-route-year="@Model.SelectedYear" 
+                           asp-route-departmentId="@Model.SelectedDepartmentId" 
+                           asp-route-leaveTypeId="@Model.SelectedLeaveTypeId"
+                           asp-route-search="@Model.SearchTerm"
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-file-excel me-1"></i>Download CSV (Detailed)
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label for="year" class="form-label">Year</label>
+                    <select name="year" id="year" class="form-select" onchange="this.form.submit()">
+                        @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 5; y--)
+                        {
+                            <option value="@y" selected="@(y == Model.SelectedYear)">@y</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="departmentId" class="form-label">Department</label>
+                    <select name="departmentId" id="departmentId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Departments</option>
+                        @foreach (var dept in Model.Departments)
+                        {
+                            <option value="@dept.DepartmentId" selected="@(dept.DepartmentId == Model.SelectedDepartmentId)">
+                                @dept.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="leaveTypeId" class="form-label">Leave Type</label>
+                    <select name="leaveTypeId" id="leaveTypeId" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Leave Types</option>
+                        @foreach (var leaveType in Model.LeaveTypes)
+                        {
+                            <option value="@leaveType.LeaveTypeId" selected="@(leaveType.LeaveTypeId == Model.SelectedLeaveTypeId)">
+                                @leaveType.Name
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search Employee</label>
+                    <input type="text" name="search" id="search" class="form-control" 
+                           placeholder="Name or email..." value="@Model.SearchTerm" />
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Balances Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table me-2"></i>Employee Leave Balances (@Model.SelectedYear)
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (Model.EmployeeBalances.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm" id="balanceTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                @if (!Model.SelectedLeaveTypeId.HasValue)
+                                {
+                                    <th>Leave Types</th>
+                                    <th class="text-end">Total Allocated</th>
+                                    <th class="text-end">Total Used</th>
+                                    <th class="text-end">Total Pending</th>
+                                    <th class="text-end">Total Available</th>
+                                }
+                                else
+                                {
+                                    <th>Leave Type</th>
+                                    <th class="text-end">Allocated</th>
+                                    <th class="text-end">Used</th>
+                                    <th class="text-end">Pending</th>
+                                    <th class="text-end">Available</th>
+                                }
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var employee in Model.EmployeeBalances)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@employee.EmployeeName</div>
+                                        <small class="text-muted">@employee.Email</small>
+                                    </td>
+                                    <td>@employee.DepartmentName</td>
+                                    @if (!Model.SelectedLeaveTypeId.HasValue)
+                                    {
+                                        <td>
+                                            @foreach (var balance in employee.LeaveBalances.Take(3))
+                                            {
+                                                <span class="badge @balance.Color me-1 mb-1">
+                                                    @balance.LeaveTypeName
+                                                </span>
+                                            }
+                                            @if (employee.LeaveBalances.Count > 3)
+                                            {
+                                                <span class="badge bg-secondary">+@(employee.LeaveBalances.Count - 3) more</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">@employee.TotalAllocated.ToString("F1")</td>
+                                        <td class="text-end">@employee.TotalUsed.ToString("F1")</td>
+                                        <td class="text-end">@employee.TotalPending.ToString("F1")</td>
+                                        <td class="text-end">
+                                            <strong class="text-success">@employee.TotalAvailable.ToString("F1")</strong>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        @if (employee.LeaveBalances.Any())
+                                        {
+                                            var balance = employee.LeaveBalances.First();
+                                            <td>
+                                                <span class="badge @balance.Color">@balance.LeaveTypeName</span>
+                                            </td>
+                                            <td class="text-end">@balance.TotalDays.ToString("F1")</td>
+                                            <td class="text-end">@balance.UsedDays.ToString("F1")</td>
+                                            <td class="text-end">@balance.PendingDays.ToString("F1")</td>
+                                            <td class="text-end">
+                                                <strong class="text-success">@balance.AvailableDays.ToString("F1")</strong>
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td colspan="5" class="text-center text-muted">No balance</td>
+                                        }
+                                    }
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-info" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#detailsModal"
+                                                onclick="showDetails(@employee.EmployeeId, '@employee.EmployeeName')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <a asp-page="/Admin/AdjustLeaveBalance" 
+                                           asp-route-employeeId="@employee.EmployeeId" 
+                                           asp-route-year="@Model.SelectedYear" 
+                                           class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No employee leave balances found for the selected criteria.</p>
+                    <p class="text-muted small">Try adjusting your filters or <a asp-page="/Admin/AdjustLeaveBalance">initialize balances</a> for employees.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="modalEmployeeName"></span> - Leave Balance Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary { border-left: 4px solid var(--bs-primary) !important; }
+    .border-left-success { border-left: 4px solid var(--bs-success) !important; }
+    .border-left-warning { border-left: 4px solid var(--bs-warning) !important; }
+    .border-left-info { border-left: 4px solid var(--bs-info) !important; }
+    .text-xs { font-size: 0.7rem; }
+    
+    #balanceTable tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+</style>
+
+<script>
+    function showDetails(employeeId, employeeName) {
+        document.getElementById('modalEmployeeName').textContent = employeeName;
+        
+        // Find the employee's balances from the current page data
+        const rows = document.querySelectorAll('#balanceTable tbody tr');
+        let balancesHtml = '<div class="table-responsive"><table class="table table-sm">';
+        balancesHtml += '<thead class="table-light"><tr><th>Leave Type</th><th>Total</th><th>Used</th><th>Pending</th><th>Available</th></tr></thead><tbody>';
+        
+        // Find employee data from the model
+        @foreach (var employee in Model.EmployeeBalances)
+        {
+            <text>
+            if (employeeId === @employee.EmployeeId) {
+                @foreach (var balance in employee.LeaveBalances)
+                {
+                    <text>
+                    balancesHtml += '<tr>';
+                    balancesHtml += '<td><span class="badge @balance.Color">@balance.LeaveTypeName</span></td>';
+                    balancesHtml += '<td>@balance.TotalDays.ToString("F1")</td>';
+                    balancesHtml += '<td>@balance.UsedDays.ToString("F1")</td>';
+                    balancesHtml += '<td>@balance.PendingDays.ToString("F1")</td>';
+                    balancesHtml += '<td><strong class="text-success">@balance.AvailableDays.ToString("F1")</strong></td>';
+                    balancesHtml += '</tr>';
+                    </text>
+                }
+            }
+            </text>
+        }
+        
+        balancesHtml += '</tbody></table></div>';
+        
+        if (balancesHtml.includes('<tr>')) {
+            document.getElementById('modalContent').innerHTML = balancesHtml;
+        } else {
+            document.getElementById('modalContent').innerHTML = '<div class="alert alert-info">No leave balances found for @Model.SelectedYear</div>';
+        }
+    }
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

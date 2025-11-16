@@ -1,0 +1,66 @@
+/* ESS Leave System global theming overrides (emerald == primary)
+   - Remap Bootstrap primary to emerald shade
+   - Keep outline-primary, text-primary, bg-primary, badge bg-primary consistent
+   - Preserve existing success/danger/warning semantics
+*/
+:root {
+  --bs-primary: #059669; /* emerald-600 */
+  --bs-primary-rgb: 5, 150, 105;
+  --bs-primary-hover: #047857; /* emerald-700 */
+  --bs-primary-contrast: #ffffff;
+}
+
+.btn-primary {
+  --bs-btn-color: var(--bs-primary-contrast);
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-color: var(--bs-primary-contrast);
+  --bs-btn-hover-bg: var(--bs-primary-hover);
+  --bs-btn-hover-border-color: var(--bs-primary-hover);
+  --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+  --bs-btn-active-bg: var(--bs-primary-hover);
+  --bs-btn-active-border-color: var(--bs-primary-hover);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-color: var(--bs-primary-contrast);
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+  --bs-btn-active-color: var(--bs-primary-contrast);
+  --bs-btn-active-bg: var(--bs-primary);
+  --bs-btn-active-border-color: var(--bs-primary);
+}
+
+.text-primary { color: var(--bs-primary) !important; }
+.bg-primary { background-color: var(--bs-primary) !important; }
+.border-primary { border-color: var(--bs-primary) !important; }
+
+.badge.bg-primary { background-color: var(--bs-primary) !important; color: var(--bs-primary-contrast) !important; }
+
+/* Dropdowns and link states that use primary */
+.dropdown-menu .dropdown-item.active, .dropdown-menu .dropdown-item:active {
+  background-color: rgba(var(--bs-primary-rgb), .1) !important;
+  color: var(--bs-primary) !important;
+}
+
+a { color: var(--bs-primary); }
+a:hover { color: var(--bs-primary-hover); }
+
+/* Keep emerald dedicated helpers for clarity */
+.btn-emerald { background-color: var(--bs-primary); color: #fff; border-color: var(--bs-primary); }
+.btn-emerald:hover { background-color: var(--bs-primary-hover); border-color: var(--bs-primary-hover); color: #fff; }
+
+/* Notification accents to green (non-destructive) */
+.text-info { color: #0ea5e9 !important; }
+
+/* Fix Bootstrap navbar-toggler icon on custom gradients */
+.navbar.bg-emerald .navbar-toggler {
+  border-color: rgba(255,255,255,.4);
+}
+.navbar.bg-emerald .navbar-toggler-icon { filter: invert(1) grayscale(100%); }
+
+/* Utility: badge light for unread states in ESS */
+.badge.unread-light { background-color: rgba(var(--bs-primary-rgb), .15) !important; color: var(--bs-primary) !important; }

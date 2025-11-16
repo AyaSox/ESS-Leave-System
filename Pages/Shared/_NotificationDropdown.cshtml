@@ -1,0 +1,142 @@
+@model List<HRManagement.Shared.Models.Notification>
+
+@{
+    var unreadCount = Model?.Count(n => !n.IsRead) ?? 0;
+}
+
+<div class="dropdown notification-dropdown">
+    <button class="btn btn-link position-relative p-2" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-bell fs-5 text-white"></i>
+        @if (unreadCount > 0)
+        {
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @unreadCount
+                <span class="visually-hidden">unread notifications</span>
+            </span>
+        }
+    </button>
+    <div class="dropdown-menu dropdown-menu-end notification-menu shadow-lg" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 500px; overflow-y: auto;">
+        <div class="dropdown-header d-flex justify-content-between align-items-center border-bottom pb-2">
+            <h6 class="mb-0">Notifications</h6>
+            @if (unreadCount > 0)
+            {
+                <form method="post" asp-page-handler="MarkAllAsRead" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-link text-decoration-none p-0">
+                        <small>Mark all as read</small>
+                    </button>
+                </form>
+            }
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                <p class="mb-0">No notifications</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var notification in Model
+                   .OrderByDescending(n => n.CreatedDate)
+                   .Take(5))
+            {
+                var notificationClass = notification.IsRead ? "" : "unread-green";
+                var urgentClass = notification.NotificationType == HRManagement.Shared.Models.NotificationType.LeaveUrgentApproval ? "border-start border-danger border-3" : "";
+                
+                <div class="dropdown-item notification-item @notificationClass @urgentClass p-3" style="white-space: normal;">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                @switch (notification.NotificationType)
+                                {
+                                    case HRManagement.Shared.Models.NotificationType.LeaveSubmitted:
+                                        <i class="fas fa-paper-plane text-primary me-2"></i>
+                                        break;
+                                    case HRManagement.Shared.Models.NotificationType.LeaveApproved:
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        break;
+                                    case HRManagement.Shared.Models.NotificationType.LeaveRejected:
+                                        <i class="fas fa-times-circle text-danger me-2"></i>
+                                        break;
+                                    case HRManagement.Shared.Models.NotificationType.LeaveCancelled:
+                                        <i class="fas fa-ban text-warning me-2"></i>
+                                        break;
+                                    case HRManagement.Shared.Models.NotificationType.LeaveRequiresApproval:
+                                        <i class="fas fa-clock text-warning me-2"></i>
+                                        break;
+                                    case HRManagement.Shared.Models.NotificationType.LeaveUrgentApproval:
+                                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                        break;
+                                    case HRManagement.Shared.Models.NotificationType.LeaveAutoApproved:
+                                        <i class="fas fa-robot text-info me-2"></i>
+                                        break;
+                                    default:
+                                        <i class="fas fa-info-circle text-secondary me-2"></i>
+                                        break;
+                                }
+                                <strong class="@(notification.IsRead ? "" : "fw-bold")">@notification.Title</strong>
+                            </div>
+                            <p class="mb-1 small text-muted">@notification.Message</p>
+                            <small class="text-muted">
+                                <i class="far fa-clock"></i> @notification.CreatedDate.ToString("MMM dd, yyyy HH:mm")
+                            </small>
+                        </div>
+                        @if (!notification.IsRead)
+                        {
+                            <form method="post" asp-page-handler="MarkAsRead" asp-route-id="@notification.NotificationId" class="ms-2">
+                                <button type="submit" class="btn btn-sm btn-link text-muted p-0" title="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                    {
+                        <a href="@notification.ActionUrl" class="btn btn-sm btn-outline-primary w-100 mt-2">
+                            <i class="fas fa-arrow-right me-1"></i> View Details
+                        </a>
+                    }
+                </div>
+                @if (notification != Model.Last())
+                {
+                    <div class="dropdown-divider"></div>
+                }
+            }
+        }
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="dropdown-divider"></div>
+            <div class="text-center py-2">
+                <a asp-page="/Notifications/Index" class="btn btn-sm btn-link text-decoration-none">
+                    View All Notifications
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .notification-dropdown .dropdown-toggle::after {
+        display: none;
+    }
+
+    .notification-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .notification-item:hover {
+        background-color: #f8f9fa !important;
+    }
+
+    .notification-menu {
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 0.5rem;
+    }
+
+    .notification-item.unread-green {
+        background-color: rgba(5,150,105,.12) !important; /* emerald-600 at 12% */
+    }
+</style>

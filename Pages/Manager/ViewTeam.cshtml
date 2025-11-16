@@ -1,0 +1,59 @@
+@page
+@model ESSLeaveSystem.Pages.Manager.ViewTeamModel
+@{
+    ViewData["Title"] = "View Team";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-users me-2 text-success"></i>Team Structure</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-page="/Index" class="text-success">Dashboard</a></li>
+                <li class="breadcrumb-item active">View Team</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-success">Direct Reports</h6>
+        </div>
+        <div class="card-body">
+            @if (!Model.Team.Any())
+            {
+                <div class="text-muted">No direct reports found.</div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var node in Model.Team)
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3"><i class="fas fa-user text-success"></i></div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">@node.Employee.FullName <small class="text-muted">(@node.Employee.Email)</small></div>
+                                    <div class="small text-muted">Department #@node.Employee.DepartmentId</div>
+                                    @if (node.DirectReports.Any())
+                                    {
+                                        <div class="mt-2 ms-4 border-start ps-3">
+                                            @foreach (var sub in node.DirectReports)
+                                            {
+                                                <div class="mb-2">
+                                                    <i class="fas fa-user text-secondary"></i>
+                                                    <span class="ms-2">@sub.FullName</span>
+                                                    <small class="text-muted ms-1">(@sub.Email)</small>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ESS Leave System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.08);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+
+        .main-content {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0 20px rgba(0,0,0,.08);
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+        }
+
+        .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+        }
+
+        .btn {
+            border-radius: 5px;
+            padding: 0.5rem 1.2rem;
+        }
+
+        .stats-card {
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .footer {
+            background-color: #fff;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .badge {
+            padding: 0.4em 0.8em;
+            font-weight: 500;
+        }
+
+        .leave-status-pending { background-color: #ffc107; }
+        .leave-status-approved { background-color: #198754; }
+        .leave-status-rejected { background-color: #dc3545; }
+        .leave-status-cancelled { background-color: #6c757d; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-emerald">
+        <div class="container">
+            <a class="navbar-brand" asp-page="/Index">
+                <i class="fas fa-calendar-check me-2"></i>ESS Leave System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Index"><i class="fas fa-home me-1"></i>Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Directory/Index"><i class="fas fa-address-book me-1"></i>Directory</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Leave/Apply"><i class="fas fa-plus-circle me-1"></i>Apply Leave</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Leave/MyApplications"><i class="fas fa-list me-1"></i>My Applications</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-page="/Leave/Balance"><i class="fas fa-chart-bar me-1"></i>Leave Balance</a>
+                        </li>
+                        @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-tasks me-1"></i>Manager
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-page="/Manager/PendingApprovals">Pending Approvals</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Manager/TeamLeave">Team Leave</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Manager/ViewTeam">View Team</a></li>
+                                </ul>
+                            </li>
+                        }
+                        @if (User.IsInRole("Admin") || User.IsInRole("HR"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cogs me-1"></i>Admin
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-page="/Admin/Index"><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-page="/Admin/EmployeeLeaveBalances"><i class="fas fa-users-cog me-2"></i>Employee Leave Balances</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Admin/AdjustLeaveBalance"><i class="fas fa-balance-scale me-2"></i>Adjust Leave Balances</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Admin/LeaveStatistics"><i class="fas fa-chart-bar me-2"></i>Leave Statistics</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="@(Environment.GetEnvironmentVariable("HRMS_URL") ?? "http://localhost:5000")" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt me-2"></i>HR Management System</a></li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        <!-- Notification Bell -->
+                        <li class="nav-item">
+                            @await Html.PartialAsync("_NotificationDropdown", ViewData["Notifications"] as List<HRManagement.Shared.Models.Notification> ?? new List<HRManagement.Shared.Models.Notification>())
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>@User.Identity.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" asp-page="/Profile/Index"><i class="fas fa-user me-2"></i>My Profile</a></li>
+                                <li><a class="dropdown-item" asp-page="/Profile/ChangePassword"><i class="fas fa-key me-2"></i>Change Password</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a asp-page="/Account/Logout" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        @RenderBody()
+    </div>
+
+    <footer class="footer">
+        <div class="container text-center text-muted">
+            <p class="mb-0">&copy; 2024 ESS Leave Management System - All rights reserved</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    
+    <!-- Floating Chatbot Widget -->
+    <style>
+        /* Emerald theme (local to ESS) to keep UI consistent */
+        :root { --emerald-600:#059669; --emerald-700:#047857; --emerald-500:#10b981; }
+        .bg-emerald { background: linear-gradient(90deg, var(--emerald-700), var(--emerald-600), var(--emerald-500)); }
+        .navbar.bg-emerald .nav-link, .navbar.bg-emerald .navbar-brand { color: #fff !important; }
+        .navbar.bg-emerald .nav-link:hover { color: #eafff5 !important; }
+        .navbar.bg-emerald .nav-link.show, .navbar.bg-emerald .nav-link:focus, .navbar.bg-emerald .nav-link.active { color: #d1fae5 !important; }
+        #chatbot-toggle { position: fixed; right: 20px; bottom: 20px; z-index: 1050; border-radius: 50%; width: 56px; height: 56px; }
+        #chatbot-panel { position: fixed; right: 20px; bottom: 86px; width: 320px; max-height: 60vh; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.15); display: none; z-index: 1050; }
+        #chatbot-header { padding: .6rem .8rem; border-bottom: 1px solid #eee; font-weight: 600; background: var(--emerald-700); color: #fff; border-radius: 10px 10px 0 0; }
+        #chatbot-body { padding: .6rem; overflow-y: auto; max-height: 46vh; }
+        #chatbot-input { padding: .5rem; border-top: 1px solid #eee; }
+        .chat-msg { font-size: .9rem; margin-bottom: .5rem; }
+        .chat-msg.you { text-align: right; }
+        .chat-actions a { margin-right: .3rem; margin-top: .25rem; }
+    </style>
+    <button id="chatbot-toggle" class="btn btn-success" title="Help">
+        <i class="fas fa-comments"></i>
+    </button>
+    <div id="chatbot-panel">
+        <div id="chatbot-header"><i class="fas fa-robot me-1"></i> ESS Assistant</div>
+        <div id="chatbot-body"></div>
+        <div id="chatbot-input" class="input-group">
+            <input type="text" class="form-control" id="chatbot-text" placeholder="Ask about leave, balances, approvals..." />
+            <button class="btn btn-success" id="chatbot-send"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+    <script>
+        (function(){
+            const toggle = document.getElementById('chatbot-toggle');
+            const panel = document.getElementById('chatbot-panel');
+            const body = document.getElementById('chatbot-body');
+            const input = document.getElementById('chatbot-text');
+            const send = document.getElementById('chatbot-send');
+
+            function appendMessage(text, you=false){
+                const div = document.createElement('div');
+                div.className = 'chat-msg' + (you ? ' you' : '');
+                div.innerText = text;
+                body.appendChild(div);
+                body.scrollTop = body.scrollHeight;
+            }
+
+            function appendActions(actions){
+                if(!actions || actions.length === 0) return;
+                const wrap = document.createElement('div');
+                wrap.className = 'chat-actions d-flex flex-wrap';
+                for (const a of actions){
+                    const link = document.createElement('a');
+                    link.href = a.url;
+                    link.className = 'btn btn-sm btn-outline-primary';
+                    link.innerHTML = `<i class="${a.icon}"></i> ${a.label}`;
+                    wrap.appendChild(link);
+                }
+                body.appendChild(wrap);
+                body.scrollTop = body.scrollHeight;
+            }
+
+            async function ask(msg){
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message: msg })
+                    });
+                    if(!res.ok){
+                        appendMessage('Sorry, I could not process your question.');
+                        return;
+                    }
+                    const data = await res.json();
+                    appendMessage(data.answer);
+                    appendActions(data.actions);
+                } catch(e){
+                    appendMessage('Network error. Please try again.');
+                }
+            }
+
+            toggle.addEventListener('click', ()=>{
+                panel.style.display = panel.style.display === 'none' || panel.style.display === '' ? 'block' : 'none';
+                if(panel.style.display==='block' && body.childElementCount===0){
+                    ask('help');
+                }
+                input.focus();
+            });
+            send.addEventListener('click', ()=>{
+                const value = input.value.trim();
+                if(!value) return; appendMessage(value, true); input.value=''; ask(value);
+            });
+            input.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ send.click(); } });
+        })();
+    </script>
+</body>
+</html>
