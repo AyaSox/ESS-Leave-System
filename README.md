@@ -3,7 +3,7 @@
 A lightweight Employee Self-Service Leave Management system built with ASP.NET Core Razor Pages (.NET 8). Simple to run locally or deploy with Docker + Railway.
 
 ## Live Demo
-URL: https://YOUR-ACTUAL-RAILWAY-URL.railway.app
+URL: https://ess-leave-system-production.up.railway.app
 
 Demo accounts:
 - Admin: sarah.johnson@company.co.za / Test@123
@@ -98,11 +98,11 @@ Limitations (SQLite):
 - Seeder: `Data/ESSDataSeeder.cs` creates roles, departments, employees, users, leave types, and initial balances. Assigns Manager role based on direct reports.
 
 ## Key Files
-- `railway.toml` – deployment config and volume mount
-- `Dockerfile` – multi-stage build
-- `appsettings.Production.json` – production configuration
-- `Data/ESSDataSeeder.cs` – seeding and role assignment
-- `Services/LeaveApprovalService.cs` – approval + auto approval logic
+- `railway.toml` â€“ deployment config and volume mount
+- `Dockerfile` â€“ multi-stage build
+- `appsettings.Production.json` â€“ production configuration
+- `Data/ESSDataSeeder.cs` â€“ seeding and role assignment
+- `Services/LeaveApprovalService.cs` â€“ approval + auto approval logic
 
 ## Deployed Feature Highlights
 - Leave application and approval workflow
