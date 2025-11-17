@@ -509,7 +509,7 @@ let currentCalendarMonth = new Date();
                     let infoHtml = description + '<br>';
                     infoHtml += `<small class="text-muted">`;
                     infoHtml += `${isPaid ? 'Paid' : 'Unpaid'} leave`;
-                    infoHtml += requiresApproval ? ' • Requires approval' : ' • No approval required';
+                    infoHtml += requiresApproval ? ' - Requires approval' : ' - No approval required';
                     infoHtml += `</small>`;
                     
                     leaveTypeInfo.innerHTML = infoHtml;

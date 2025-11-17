@@ -6,7 +6,7 @@
 
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-address-book me-2"></i>Who’s Who</h1>
+        <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-address-book me-2"></i>Company Directory</h1>
     </div>
 
     <div class="card shadow mb-3">
@@ -76,7 +76,7 @@
                                 <td style="width:60px">
                                     @if (!string.IsNullOrWhiteSpace(e.ProfilePicturePath))
                                     {
-                                        <img src="@e.ProfilePicturePath" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;" />
+                                        <img src="@e.ProfilePicturePath" class="rounded-circle" style="width:40px;height:40px;object-fit:cover;" alt="@e.FullName" />
                                     }
                                     else
                                     {
@@ -90,7 +90,16 @@
                                 <td>@e.JobTitle</td>
                                 <td><a href="mailto:@e.Email" class="text-success">@e.Email</a></td>
                                 <td>@Model.GetDepartmentName(e.DepartmentId)</td>
-                                <td>@Model.GetManagerName(e.LineManagerId)</td>
+                                <td>
+                                    @if(Model.GetManagerName(e.LineManagerId) == "None")
+                                    {
+                                        <span class="text-muted">Top Level</span>
+                                    }
+                                    else
+                                    {
+                                        @Model.GetManagerName(e.LineManagerId)
+                                    }
+                                </td>
                                 <td>@e.DateHired.ToString("MMM dd, yyyy")</td>
                             </tr>
                         }

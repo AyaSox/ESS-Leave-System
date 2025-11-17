@@ -1,0 +1,330 @@
+@page "/Admin/LeaveTypesGuide"
+@model ESSLeaveSystem.Pages.Admin.LeaveTypesGuideModel
+@{
+    ViewData["Title"] = "Leave Types Guide";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-book-open me-2"></i>Leave Types & Accrual Guide
+        </h1>
+        <a asp-page="/Admin/Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Admin Dashboard
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Understanding Leave Management</h5>
+                <p class="mb-0">This guide explains how leave types work, accrual cycles, reset periods, and carry-over logic in the ESS Leave System.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leave Accrual & Cycles -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-calendar-plus me-2"></i>Leave Accrual System
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-success">How Leave Accrues:</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>Annual Cycle:</strong> Leave balances are allocated on a calendar year basis (January 1 - December 31)
+                        </li>
+                        <li class="mb-2">
+                            <strong>Automatic Allocation:</strong> Full leave entitlement is allocated at the start of each year
+                        </li>
+                        <li class="mb-2">
+                            <strong>Pro-Rata Calculation:</strong> New employees receive pro-rated leave based on their hire date
+                        </li>
+                        <li class="mb-2">
+                            <strong>Monthly Accrual:</strong> Some leave types (like sick leave) accrue monthly over a 36-month cycle
+                        </li>
+                    </ul>
+
+                    <h6 class="text-success mt-4">Example Scenario:</h6>
+                    <div class="alert alert-light">
+                        <p class="mb-1"><strong>Employee hired: March 15, 2025</strong></p>
+                        <p class="mb-1">Annual Leave Entitlement: 15 days/year</p>
+                        <p class="mb-1">Calculation: 15 days × (9.5 months / 12 months) = 11.88 days</p>
+                        <p class="mb-0"><strong>First Year Balance: 12 days</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-sync-alt me-2"></i>Reset & Carry-Over Logic
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-info">Annual Reset (January 1):</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <strong>New Allocation:</strong> Full annual entitlement is refreshed
+                        </li>
+                        <li class="mb-2">
+                            <strong>Carry-Over:</strong> Unused annual leave (up to policy limits) carries forward
+                        </li>
+                        <li class="mb-2">
+                            <strong>Maximum Carry-Over:</strong> Typically 5-10 days (configurable per leave type)
+                        </li>
+                        <li class="mb-2">
+                            <strong>Use It or Lose It:</strong> Excess unused leave is forfeited after carry-over limit
+                        </li>
+                    </ul>
+
+                    <h6 class="text-info mt-4">Carry-Over Example:</h6>
+                    <div class="alert alert-light">
+                        <p class="mb-1"><strong>Year End: December 31, 2024</strong></p>
+                        <p class="mb-1">Available Balance: 8 days unused</p>
+                        <p class="mb-1">Carry-Over Limit: 5 days</p>
+                        <p class="mb-1"><strong>Carried Forward: 5 days</strong></p>
+                        <p class="mb-0">New Year Total: 15 (new) + 5 (carried) = 20 days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Leave Types -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-list me-2"></i>Active Leave Types in System
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Leave Type</th>
+                                    <th>Days/Year</th>
+                                    <th>Description</th>
+                                    <th>Approval Required</th>
+                                    <th>Paid</th>
+                                    <th>Accrual Period</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var lt in Model.LeaveTypes)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            <span class="badge @lt.Color">@lt.Name</span>
+                                        </td>
+                                        <td>@lt.DefaultDaysPerYear</td>
+                                        <td>@lt.Description</td>
+                                        <td>
+                                            @if (lt.RequiresApproval)
+                                            {
+                                                <span class="badge bg-warning text-dark">Yes</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">No</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (lt.IsPaid)
+                                            {
+                                                <span class="badge bg-success">Paid</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Unpaid</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (lt.Name.Contains("Sick"))
+                                            {
+                                                <span>36 months</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Annual</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BCEA Compliance -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-gavel me-2"></i>BCEA Compliance (South Africa)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6>Basic Conditions of Employment Act Requirements:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success mt-3">Annual Leave</h6>
+                            <ul>
+                                <li>Minimum: 21 consecutive days per year (or 1 day per 17 days worked)</li>
+                                <li>Must be taken within 6 months of becoming due</li>
+                                <li>Can be carried over with employer agreement</li>
+                                <li>Pay-out only allowed on termination</li>
+                            </ul>
+
+                            <h6 class="text-success mt-3">Sick Leave</h6>
+                            <ul>
+                                <li>6 weeks per 36-month cycle (pro-rated)</li>
+                                <li>Medical certificate required after 2 consecutive days</li>
+                                <li>Resets every 36 months from hire date</li>
+                                <li>Unused sick leave does not carry over</li>
+                            </ul>
+
+                            <h6 class="text-success mt-3">Family Responsibility Leave</h6>
+                            <ul>
+                                <li>3 days per year (after 4 months employment)</li>
+                                <li>For birth, illness, death of immediate family</li>
+                                <li>Not accumulative - resets annually</li>
+                            </ul>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-info mt-3">Maternity Leave</h6>
+                            <ul>
+                                <li>4 consecutive months (120 days)</li>
+                                <li>Can start 4 weeks before expected birth</li>
+                                <li>No pay from employer (UIF benefit available)</li>
+                                <li>Job protected during leave</li>
+                            </ul>
+
+                            <h6 class="text-info mt-3">Paternity Leave</h6>
+                            <ul>
+                                <li>10 consecutive days within 4 months of birth</li>
+                                <li>Can start from birth date</li>
+                                <li>No pay from employer (UIF benefit available)</li>
+                            </ul>
+
+                            <h6 class="text-info mt-3">Study Leave</h6>
+                            <ul>
+                                <li>Not mandatory by BCEA</li>
+                                <li>Company policy based</li>
+                                <li>Typically 5-10 days for exams</li>
+                                <li>May require proof of registration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance Calculations -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-calculator me-2"></i>Balance Calculations
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6>Understanding Leave Balance Components:</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card border-success mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="text-success">Total Days</h5>
+                                    <p class="small mb-0">Annual entitlement + Carried forward days</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-danger mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="text-danger">Used Days</h5>
+                                    <p class="small mb-0">Approved and completed leave</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-warning mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="text-warning">Pending Days</h5>
+                                    <p class="small mb-0">Leave awaiting approval</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-primary mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="text-primary">Available Days</h5>
+                                    <p class="small mb-0">Total - Used - Pending</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>Calculation Example:</h6>
+                        <p class="mb-1">Total Days: 15 + 3 (carried) = 18</p>
+                        <p class="mb-1">Used Days: 5 (taken)</p>
+                        <p class="mb-1">Pending Days: 2 (awaiting approval)</p>
+                        <p class="mb-0"><strong>Available Days: 18 - 5 - 2 = 11 days</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Reference -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-clipboard-list me-2"></i>Quick Reference Guide
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-dark">When Leave Resets:</h6>
+                            <ul>
+                                <li><strong>January 1:</strong> Annual leave, Family leave</li>
+                                <li><strong>36-month cycle:</strong> Sick leave</li>
+                                <li><strong>Once-off:</strong> Maternity, Paternity</li>
+                                <li><strong>Never resets:</strong> Study leave (accumulated)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-dark">Carry-Over Rules:</h6>
+                            <ul>
+                                <li><strong>Annual Leave:</strong> Up to 5 days (configurable)</li>
+                                <li><strong>Sick Leave:</strong> No carry-over</li>
+                                <li><strong>Family Leave:</strong> No carry-over</li>
+                                <li><strong>Study Leave:</strong> Unlimited carry-over</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
